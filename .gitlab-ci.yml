@@ -1,0 +1,44 @@
+stages:
+  - test
+  - merge
+  - deploy
+
+# Define the test job, auto run when merging to Development
+test_job:
+  stage: test
+  script:
+    - npm install
+    - npm run test
+  only:
+    - development
+
+merge_job:
+  stage: merge
+  script:
+    # Merge development into main if tests pass
+    - git config --global user.email "ci@yourdomain.com"
+    - git config --global user.name "CI Bot"
+    - git checkout main
+    - git merge development
+    - git push origin main
+  only:
+    - development
+
+# Define the deploy job, which is manually triggered
+deploy_staging_job:
+  stage: deploy
+  script:
+    - npm run deploy:staging
+  only:
+    - main
+  when: manual
+  environment: staging
+
+deploy_prod_job:
+  stage: deploy
+  script:
+    - npm run deploy:prod
+  only:
+    - main
+  when: manual
+  environment: production
